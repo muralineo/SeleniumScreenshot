@@ -6,7 +6,11 @@ import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.io.FileHandler;
+import ru.yandex.qatools.ashot.AShot;
+import ru.yandex.qatools.ashot.Screenshot;
+import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
 
+import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
@@ -50,10 +54,8 @@ public class ScreenshotTest {
      * @return Map
      */
     public static Map<String, String> userCredentials(){
-
         Scanner scan = new Scanner(System.in);
         String continued = "c";
-
         List<String> usernames = new ArrayList<>();
         List<String> passwords = new ArrayList<>();
 
@@ -62,12 +64,12 @@ public class ScreenshotTest {
             String id = scan.nextLine();
             System.out.println("Enter password: ");
             String pass = scan.nextLine();
-            System.out.println("Press 'c' to add username and password or Press any key to quit: ");
+            System.out.println("Press 'c' to add username and " +
+                    "password or Press any key to quit: ");
             continued = scan.nextLine();
             usernames.add(id);
             passwords.add(pass);
         }
-
         Map<String, String> credentials = new HashMap<>();
         for (int i = 0; i < usernames.size(); i++) {
             credentials.put("user_" + i , usernames.get(i));
@@ -78,8 +80,6 @@ public class ScreenshotTest {
 
     /**
      * It's an utility method to take screenshot
-     * @param driver
-     * @throws IOException
      */
     public static void takeScreenshot(WebDriver driver) throws IOException {
         Date date = new Date();
@@ -90,12 +90,11 @@ public class ScreenshotTest {
         File source = screenshot.getScreenshotAs(OutputType.FILE);
         File destination = new File(".//Screenshots//" + fileName);
         FileHandler.copy(source, destination);
-    }
 
+    }
     /**
      * It checks the login page by passing username and password.
      * If it fails to log in, a screenshot will be captured with timestamp.
-     * @throws IOException
      */
     public static void loginTestNetflix(Map<String, String> credentials) throws IOException {
         for (int i = 0; i < credentials.size()/2 ; i++) {
@@ -128,9 +127,8 @@ public class ScreenshotTest {
 
             invokeBrowser(BrowserName.CHROME, "imdb");
             driver.findElement(By.xpath("//*[text()='Sign In']")).click();
-            driver.findElement(By.xpath("//span[contains(text(), 'Sign in with IMDb')]")).click();
-
-
+            driver.findElement(By.xpath("//span[contains(text(), " +
+                    "'Sign in with IMDb')]")).click();
             WebElement userId = driver.findElement(By.xpath("//input[@type='email']"));
             userId.sendKeys(credentials.get("user_" + i));
             WebElement pass = driver.findElement(By.xpath("//input[@name='password']"));
@@ -141,6 +139,7 @@ public class ScreenshotTest {
 
             try {
                 driver.findElement(By.xpath("(//div[text()='Watchlist'])[1]"));
+                ashotScreenshot();
                 System.out.println("Login was successful");
             } catch (Exception e) {
                 System.out.println("Wrong credentials");
@@ -152,10 +151,22 @@ public class ScreenshotTest {
         }
     }
 
+    public static void ashotScreenshot(){
+        Screenshot shot = new AShot().shootingStrategy(ShootingStrategies.viewportPasting(1000)).takeScreenshot(driver);
+        try {
+            ImageIO.write(shot.getImage(), "jpg", new File(".//ashot.jpg"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     public static void main(String[] args) throws IOException {
 
         loginTestNetflix(userCredentials());
         loginTestImdb(userCredentials());
+
+
 
     }
 
